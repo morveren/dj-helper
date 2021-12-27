@@ -1,0 +1,8 @@
+numpy
+pandas
+notebook
+mutagen # for extracting information from files
+jupyter_contrib_nbextensions
+tqdm
+absl-py
+tinytag

@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  dj_helper:
+    container_name: dj-helper
+    restart: always
+    build: .
+    volumes:
+      - "./src:/app"
+      - "./notebooks:/notebooks"
+      - "/Users/jaivinraj/Soulseek Downloads/complete:/soulseek"
+      - "/Users/jaivinraj/dj_music_store:/music_store"
+      - "/Users/jaivinraj/bandcamp:/bandcamp"
+
+    ports:
+      - "8930:8930"
+    command: sh -c 'python main.py'
+    # command: tail -f /dev/null
