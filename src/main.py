@@ -4,8 +4,10 @@ import mutagen
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 from mutagen.easyid3 import EasyID3
+from mutagen.aiff import AIFF
 from mutagen.wave import WAVE
 from tinytag import TinyTag
+from pydub import AudioSegment
 
 from shutil import move,move
 
@@ -18,8 +20,11 @@ from absl import app
 
 import time
 
+EXTS = {".flac":FLAC,".mp3":partial(MP3,ID3=EasyID3),".wav":TinyTag.get,".aiff":AIFF}
 
-def get_new_path(fpath,processor,foldername = "soulseek",ext=None):
+
+
+def get_new_path(fpath,processor,foldername = "soulseek",ext=None,fields = ["artist","album","title"]):
     """Generate new path for a file to move to
 
     Parameters
@@ -40,7 +45,7 @@ def get_new_path(fpath,processor,foldername = "soulseek",ext=None):
     """
     if ext is None:
         ext = os.path.splitext(fpath)[-1]
-    fields = ["artist","album","title"]
+    # fields = ["artist","album","title"]
     try:
         audio = processor(fpath)
     # except mutagen.flac.error as e:
@@ -71,13 +76,12 @@ def get_new_path(fpath,processor,foldername = "soulseek",ext=None):
 def import_files(dir):
         # get files
         print("Getting files...")
-        exts = {".flac":FLAC,".mp3":partial(MP3,ID3=EasyID3),".wav":TinyTag.get}
-        fpaths = {ext:[] for ext in exts}
+        fpaths = {ext:[] for ext in EXTS}
         # get filepaths
         for root, dirs, files in os.walk(dir):
             for filename in files:
                 ext = None
-                for ext in exts:
+                for ext in EXTS:
                     if filename.endswith(ext):
                         fpaths[ext].append(os.path.join(root,filename))
                         break
@@ -89,7 +93,7 @@ def import_files(dir):
         fpath_mappings = {}
         for ext in fpaths:
             for fpath in tqdm(fpaths[ext]):
-                fpath_mappings[fpath] = get_new_path(fpath,exts[ext],foldername=dir)
+                fpath_mappings[fpath] = get_new_path(fpath,EXTS[ext],foldername=dir)
         print("Moving files over...")
         counter = 0
         for fpath in tqdm(fpath_mappings):
@@ -97,7 +101,15 @@ def import_files(dir):
             if dest is not None:
                 # check haven't already imported
                 if not os.path.exists(dest):
-                    folder,file = os.path.split(dest)
+                    if fpath.endswith(".flac"):
+                        sound = AudioSegment.from_file(fpath)
+                        fileroot = os.path.splitext(fpath)[0]
+                        fpath_new = fileroot + ".aiff"
+                        sound.export(fpath_new, format="aiff")
+                        os.remove(fpath) # delete old file
+                        fpath = fpath_new # update to new path
+                        dest = os.path.splitext(dest)[0] + ".aiff" # update destination
+                    folder,filename = os.path.split(dest)
                     if not os.path.exists(folder):
                         os.makedirs(folder)
                     move(fpath,dest)
