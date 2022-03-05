@@ -51,6 +51,7 @@ def get_new_path(fpath,processor,foldername = "soulseek",ext=None,fields = ["art
     # except mutagen.flac.error as e:
     #     return None
     except Exception as e:
+        print(f"Unable to process path {fpath}")
         return None
         
     song_attrs = {}
@@ -87,6 +88,7 @@ def import_files(dir):
                         break
         print("Found files with the following extensions:\n","\n".join([ext + ":" + str(len(fpaths[ext])) + '\n' for ext in fpaths]))
 
+
         # print("found flac files:",",".join(fpaths[".flac"]]))
                         
         print("Creating mappings to new destinations...")
@@ -101,6 +103,7 @@ def import_files(dir):
             if dest is not None:
                 # check haven't already imported
                 if not os.path.exists(dest):
+                    # removed as aiff not importing right now
                     if fpath.endswith(".flac"):
                         sound = AudioSegment.from_file(fpath)
                         fileroot = os.path.splitext(fpath)[0]
@@ -114,6 +117,10 @@ def import_files(dir):
                         os.makedirs(folder)
                     move(fpath,dest)
                     counter +=1
+                else:
+                    print(f"Not importing {dest} as it already exists")
+                    # remove
+                    os.remove(fpath)
         
         print("File import complete.",f"Imported {counter} out of {len(fpath_mappings)} files")
 

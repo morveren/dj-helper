@@ -5,6 +5,8 @@ FROM python:3.8
 RUN apt-get update &&\
     apt-get install graphviz -y
 
+RUN apt-get install -y ffmpeg
+
 # RUN apt-get install watch -y
 
 
