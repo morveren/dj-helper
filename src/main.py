@@ -22,6 +22,7 @@ import time
 
 EXTS = {".flac":FLAC,".mp3":partial(MP3,ID3=EasyID3),".wav":TinyTag.get,".aiff":AIFF}
 
+AIFF_FIELD_MAP = {"title":"TIT2","artist":"TPE1","album":"TALB"}
 
 
 def get_new_path(fpath,processor,foldername = "soulseek",ext=None,fields = ["artist","album","title"]):
@@ -34,7 +35,7 @@ def get_new_path(fpath,processor,foldername = "soulseek",ext=None,fields = ["art
     processor : mutagen object
         processor for extracting information from the file
     foldername : str, optional
-        name of folder within /music_store/holding, by default "soulseek"
+        name of folder within /music_store, by default "soulseek"
     ext : string, optional
         file extension, by default None
 
@@ -45,11 +46,8 @@ def get_new_path(fpath,processor,foldername = "soulseek",ext=None,fields = ["art
     """
     if ext is None:
         ext = os.path.splitext(fpath)[-1]
-    # fields = ["artist","album","title"]
     try:
         audio = processor(fpath)
-    # except mutagen.flac.error as e:
-    #     return None
     except Exception as e:
         print(f"Unable to process path {fpath}")
         return None
@@ -57,7 +55,14 @@ def get_new_path(fpath,processor,foldername = "soulseek",ext=None,fields = ["art
     song_attrs = {}
     for field in fields:
         field_val = f"Unknown {field}"
-        if not isinstance(audio,dict):
+        # special case for aiff processor
+        if processor==AIFF:
+            subfield = AIFF_FIELD_MAP[field]
+            if subfield in audio:
+                field_vals = audio[subfield].text
+                if len(field_vals)>0:
+                    field_val = field_vals[0]
+        elif processor == TinyTag.get:
             try:
                 val_poss = getattr(audio,field)
                 if val_poss is not None:
@@ -71,7 +76,7 @@ def get_new_path(fpath,processor,foldername = "soulseek",ext=None,fields = ["art
         song_attrs[field] = field_val
     if song_attrs["title"] == f"Unknown title":
         song_attrs["title"] = os.path.splitext(os.path.split(fpath)[-1])[0]
-    return os.path.join("/music_store/holding",foldername.strip("/"),song_attrs["artist"],song_attrs["album"],song_attrs["title"]+ext)
+    return os.path.join("/music_store",foldername.strip("/"),song_attrs["artist"],song_attrs["album"],song_attrs["title"]+ext)
 
 
 def import_files(dir):
