@@ -8,14 +8,7 @@ services:
     volumes:
       - "./src:/app"
       - "./notebooks:/notebooks"
-      - "/Users/jaivinraj/Soulseek Downloads/complete:/soulseek"
-      # - "/Users/jaivinraj/dj_music_store_backup/holding/soulseek:/soulseek"
-      - "/Users/jaivinraj/dj_music_store:/music_store"
-      # - "/Users/jaivinraj/dj_music_store_v2:/music_store"
-      - "/Users/jaivinraj/bandcamp:/bandcamp"
-      # - "/Users/jaivinraj/dj_music_store_backup/holding/bandcamp:/bandcamp"
-
-    ports:
-      - "8930:8930"
+      - "${SOULSEEK_DIR}:/soulseek"
+      - "${MUSIC_STORE_DIR}:/music_store"
+      - "${BANDCAMP_DIR}:/bandcamp"
     command: sh -c 'python main.py'
-    # command: tail -f /dev/null
